@@ -87,3 +87,4 @@ for m=10:10:n
 		end
 	end
 end
+writecsv("hw1_output.csv", sol_recovered)
