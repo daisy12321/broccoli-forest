@@ -3,19 +3,7 @@ using Distributions
 
 srand(4)
 
-function solve_problem1(m=20,n=30,k=10)
-	d = Normal(0, 1)
-	A = rand(d, m, n)
-
-	x0 = rand(d, n)
-	x0[sample(1:n,n-k,replace=false)] = 0
-	x0
-	countnz(x0)
-
-	b = A*x0
-	BigM = 100
-
-
+function solve_problem1(A, b, m=20,n=30,k=10)
 	####### Problem 1a: 		#############
 	# solve original l0 problem
 
@@ -43,8 +31,10 @@ function solve_problem1(m=20,n=30,k=10)
 
 	x_sol = getValue(x[:])
 	countnz(x_sol)
-	# correctly recover!
+	return(x_sol)
+end
 
+function solve_problem2(A, b, m=20,n=30,k=10)
 	####### Problem 1b: 		#############
 	# l1 relaxation
 
@@ -67,24 +57,40 @@ function solve_problem1(m=20,n=30,k=10)
 	x_sol2 = getValue(xpos[:]-xneg[:])
 	countnz(x_sol2)
 	# correctly reocover!
-	return([x_sol x_sol2])
+	return(x_sol2)
 end
 
-n = 60
+n = 100
 # m = 10
 # k = 5
 # x_sol, x_sol2 =  solve_problem1(m,n,k)
+d = Normal(0, 1)		
 
-
-sol_recovered = fill(false, convert(Int, n/10), 5)
-
+sol_recovered = fill(0, convert(Int, n/10), 10)
+sol_header = [1:10]' #k/m
+sol_rowname = [0:(n/10)]
 for m=10:10:n
-	for k_idx=1:5
-		k = convert(Int, m/5*k_idx)
-		x_sol, x_sol2 =  solve_problem1(m,n,k)
-		if countnz(x_sol) == countnz(x_sol2)
+	for k_idx=1:10
+		k = convert(Int, m/10*k_idx)
+
+		A = rand(d, m, n)
+		x0 = rand(d, n)
+		# k non-zero elements
+		x0[sample(1:n,n-k,replace=false)] = 0
+		x0
+		countnz(x0)
+
+		b = A*x0
+		BigM = 100
+
+		# x_sol =  solve_problem1(A, b, m,n,k)
+		x_sol2 = solve_problem2(A, b, m,n,k)
+		# if countnz(x_sol) == countnz(x_sol2)
+		if countnz(x_sol2) == k
 			sol_recovered[convert(Int, m/10), k_idx] = true
 		end
 	end
 end
-writecsv("hw1_output.csv", sol_recovered)
+output = [sol_header; sol_recovered]
+output_full = [sol_rowname/10 output]
+writecsv("hw1_output.csv", output_full)
